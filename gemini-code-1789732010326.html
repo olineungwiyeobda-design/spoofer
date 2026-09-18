@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Have Official - Desktop Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #070707;
+            color: #E8E8EA;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #app-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(circle at 50% 40%, #0D0D0F 0%, #0A0A0B 60%, #050506 100%);
+            overflow: hidden;
+        }
+
+        .brand-logo, .main-title, .license-title, .loading-text, .ready-title, .panel-title, .action-btn {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .bg-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.85) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 500ms cubic-bezier(0.4, 0, 0.2, 1), visibility 500ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* HEADER & FOOTER */
+        header {
+            height: 90px;
+            padding: 0 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .brand-logo {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: #E5E5E7;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 25px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: #38383C;
+            z-index: 20;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+        }
+
+        /* LICENSE SCREEN */
+        #screen-license {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .license-card {
+            width: 440px;
+            height: 270px;
+            background: rgba(15, 15, 17, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 35px;
+            position: relative;
+        }
+
+        .license-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #EEEEF0;
+            text-align: center;
+        }
+
+        .license-subtitle {
+            font-size: 11px;
+            color: #68686D;
+            margin-top: 6px;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 340px;
+            height: 44px;
+            border-radius: 8px;
+            background: #0B0B0D;
+            margin-bottom: 14px;
+        }
+
+        .license-input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #D9D9DC;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-align: center;
+            outline: none;
+            transition: border-color 300ms ease, box-shadow 300ms ease;
+        }
+
+        .license-input:focus {
+            border-color: rgba(216, 154, 50, 0.5);
+            box-shadow: 0 0 12px rgba(216, 154, 50, 0.15);
+        }
+
+        .license-input::placeholder {
+            color: #55555B;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .border-tracer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border-radius: 8px;
+            overflow: visible;
+            opacity: 0;
+            transition: opacity 200ms ease;
+        }
+
+        .border-tracer rect {
+            fill: none;
+            stroke: #F0B13D;
+            stroke-width: 2;
+            stroke-dasharray: 60 700;
+            stroke-dashoffset: 0;
+            filter: drop-shadow(0 0 5px #F0B13D);
+        }
+
+        .border-tracer.animating {
+            opacity: 1;
+        }
+
+        .border-tracer.animating rect {
+            animation: traceBorder 1.4s linear infinite;
+        }
+
+        @keyframes traceBorder {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -760; }
+        }
+
+        .auth-btn {
+            width: 340px;
+            height: 44px;
+            background: linear-gradient(135deg, #B97820, #E1A43B);
+            border: none;
+            border-radius: 8px;
+            color: #111111;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: transform 150ms ease, filter 150ms ease;
+            outline: none;
+        }
+
+        .auth-btn:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 0 15px rgba(225, 164, 59, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+
+        .error-msg {
+            position: absolute;
+            bottom: 10px;
+            font-size: 9px;
+            color: #E55353;
+            letter-spacing: 1.5px;
+            opacity: 0;
+            transition: opacity 200ms ease;
+        }
+
+        .shake {
+            animation: shakeHorizontal 300ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shakeHorizontal {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* MAIN SELECTION */
+        #screen-main {
+            align-items: center;
+        }
+
+        .title-area {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        .main-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #E7E7E9;
+        }
+
+        .games-grid {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            max-width: 1600px;
+            width: 95%;
+            flex-wrap: wrap;
+        }
+
+        .game-card {
+            width: 200px;
+            height: 320px;
+            background: #111113;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: rgba(240, 177, 61, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(216, 154, 50, 0.18);
+        }
+
+        .game-card.selected {
+            border-color: #F0B13D;
+            box-shadow: 0 0 25px rgba(240, 177, 61, 0.4);
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .game-img-container {
+            width: 100%;
+            height: 260px;
+            position: relative;
+            overflow: hidden;
+            background: #0B0B0D;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-cover-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 350ms ease, filter 350ms ease;
+        }
+
+        .game-card:hover .game-cover-img {
+            transform: scale(1.06);
+            filter: brightness(1.1);
+        }
+
+        .game-card-footer {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            background: #111113;
+        }
+
+        .game-card-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: #858589;
+            text-align: center;
+            transition: color 200ms ease;
+        }
+
+        .game-card:hover .game-card-title, .game-card.selected .game-card-title {
+            color: #E8E8EA;
+        }
+
+        .select-board-container {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 12px 48px;
+            background: linear-gradient(135deg, #B97820, #E1A43B);
+            border: none;
+            border-radius: 8px;
+            color: #111111;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: transform 150ms ease, filter 150ms ease, opacity 200ms ease;
+            outline: none;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .action-btn:not(:disabled):hover {
+            filter: brightness(1.1);
+            box-shadow: 0 0 15px rgba(225, 164, 59, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* DUAL PANEL OPTIONS SCREEN */
+        #screen-options {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .panels-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: stretch;
+            width: 800px;
+            max-width: 90%;
+        }
+
+        .option-panel {
+            flex: 1;
+            background: rgba(15, 15, 17, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 30px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #F0B13D;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+
+        .info-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #68686D;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #E8E8EA;
+            letter-spacing: 1px;
+        }
+
+        /* CUSTOM DROPDOWN */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+            margin-bottom: auto;
+        }
+
+        .dropdown-selected {
+            width: 100%;
+            padding: 14px;
+            background: #0B0B0D;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #E8E8EA;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 200ms ease;
+        }
+
+        .dropdown-selected:hover {
+            border-color: rgba(240, 177, 61, 0.5);
+        }
+
+        .dropdown-options {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: #111113;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+        }
+
+        .dropdown-options.show {
+            display: block;
+        }
+
+        .dropdown-option {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #A0A0A5;
+            cursor: pointer;
+            transition: background 200ms ease, color 200ms ease;
+        }
+
+        .dropdown-option:hover {
+            background: rgba(240, 177, 61, 0.15);
+            color: #FFF;
+        }
+
+        /* ALERT POPUP */
+        .alert-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 200ms ease, visibility 200ms ease;
+        }
+
+        .alert-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .alert-box {
+            background: #151518;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px 35px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .alert-text {
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #E8E8EA;
+            margin-bottom: 20px;
+        }
+
+        .alert-close-btn {
+            padding: 8px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            color: #FFF;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* LOADING SCREEN */
+        #screen-loading {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spinner-ring {
+            width: 56px;
+            height: 56px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-top: 2px solid #F0B13D;
+            border-right: 2px solid rgba(240, 177, 61, 0.3);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 28px;
+            box-shadow: 0 0 20px rgba(240, 177, 61, 0.15);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            letter-spacing: 5px;
+            color: #D8D8DB;
+            font-weight: 700;
+            transition: opacity 300ms ease;
+            opacity: 1;
+        }
+
+        .loading-text.fade-out {
+            opacity: 0;
+        }
+
+        /* REBOOT SCREEN */
+        #screen-reboot {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .reboot-panel {
+            width: 440px;
+            background: rgba(17, 17, 19, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 45px;
+            box-sizing: border-box;
+        }
+
+        .reboot-title {
+            font-size: 18px;
+            letter-spacing: 3px;
+            color: #7bed9f;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .back-btn {
+            padding: 12px 36px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #E8E8EA;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .back-btn:hover {
+            border-color: #F0B13D;
+            color: #F0B13D;
+            background: rgba(240, 177, 61, 0.06);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="bg-vignette"></div>
+        <div class="bg-grid"></div>
+
+        <!-- 1. LICENSE SCREEN -->
+        <div id="screen-license" class="screen active">
+            <div class="license-card">
+                <div class="license-title">LICENSE AUTHENTICATION</div>
+                <div class="license-subtitle">Enter your license key to continue.</div>
+                
+                <div class="input-wrapper" id="inputWrapper">
+                    <input type="text" id="licenseKey" class="license-input" placeholder="ENTER LICENSE KEY" autocomplete="off" spellcheck="false">
+                    <svg class="border-tracer" id="borderTracer" viewBox="0 0 340 44">
+                        <rect x="1" y="1" width="338" height="42" rx="7" ry="7"></rect>
+                    </svg>
+                </div>
+
+                <button class="auth-btn" id="authBtn" onclick="handleAuth()">AUTHENTICATE</button>
+                <div class="error-msg" id="errorMsg">INVALID LICENSE KEY</div>
+            </div>
+        </div>
+
+        <!-- 2. MAIN MOTHERBOARD SELECTION SCREEN -->
+        <div id="screen-main" class="screen">
+            <header>
+                <div class="brand-container">
+                    <span class="brand-logo">HAVE OFFICIAL</span>
+                </div>
+            </header>
+
+            <div class="title-area">
+                <div class="main-title">SELECT YOUR MOTHERBOARD</div>
+            </div>
+
+            <div class="games-grid">
+                <!-- 1. ASUS -->
+                <div class="game-card" onclick="highlightBoard(this, 'ASUS')">
+                    <div class="game-img-container">
+                        <img src="https://i.namu.wiki/i/NhJYzepX4ntE9SwwhI0B5nyw9s4NyQg-BRrWETb8CmXseXxHzlEcn2q2UDz4mAVlDDIJLfHaOaJNzCEWEECLEg.svg" alt="ASUS" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">ASUS</span>
+                    </div>
+                </div>
+
+                <!-- 2. GIGABYTE -->
+                <div class="game-card" onclick="highlightBoard(this, 'GIGABYTE')">
+                    <div class="game-img-container">
+                        <img src="https://i.postimg.cc/3wRrZhFy/gigabyte-logo-png-svg-removebg-preview.png" alt="GIGABYTE" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">GIGABYTE</span>
+                    </div>
+                </div>
+
+                <!-- 3. MSI -->
+                <div class="game-card" onclick="highlightBoard(this, 'MSI')">
+                    <div class="game-img-container">
+                        <img src="https://i.postimg.cc/g2Mmj5FD/png-transparent-msi-logo-thumbnail-removebg-preview.png" alt="MSI" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">MSI</span>
+                    </div>
+                </div>
+
+                <!-- 4. ASRock -->
+                <div class="game-card" onclick="highlightBoard(this, 'ASRock')">
+                    <div class="game-img-container">
+                        <img src="https://i.postimg.cc/8zCg2HJX/png-clipart-asrock-text-asrock-motherboard-logo-computer-brand-text-trademark-removebg-preview.png" alt="ASRock" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">ASRock</span>
+                    </div>
+                </div>
+
+                <!-- 5. BIOSTAR -->
+                <div class="game-card" onclick="highlightBoard(this, 'BIOSTAR')">
+                    <div class="game-img-container">
+                        <img src="https://i.postimg.cc/902vJtHx/images-removebg-preview.png" alt="BIOSTAR" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">BIOSTAR</span>
+                    </div>
+                </div>
+
+                <!-- 6. HP -->
+                <div class="game-card" onclick="highlightBoard(this, 'HP')">
+                    <div class="game-img-container">
+                        <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/HP_logo_2012.svg/1280px-HP_logo_2012.svg.png?utm_source=ko.wikipedia.org&utm_campaign=index&utm_content=thumbnail" alt="HP" class="game-cover-img">
+                    </div>
+                    <div class="game-card-footer">
+                        <span class="game-card-title">HP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="select-board-container">
+                <button class="action-btn" id="selectBoardBtn" disabled onclick="confirmBoardSelection()">SELECT</button>
+            </div>
+
+            <footer>HAVE OFFICIAL</footer>
+        </div>
+
+        <!-- 3. DUAL PANEL OPTIONS SCREEN -->
+        <div id="screen-options" class="screen">
+            <header>
+                <div class="brand-container">
+                    <span class="brand-logo">HAVE OFFICIAL</span>
+                </div>
+            </header>
+
+            <div class="panels-container">
+                <!-- LEFT PANEL -->
+                <div class="option-panel">
+                    <div class="panel-title">SELECTED OPTIONS</div>
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="info-label">Selected Motherboard</span>
+                            <span class="info-value" id="displaySelectedBoard">None</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Selected Option</span>
+                            <span class="info-value" id="displaySelectedOption">None</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL -->
+                <div class="option-panel">
+                    <div class="panel-title">OPTION SELECT</div>
+                    <div class="custom-dropdown">
+                        <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
+                            <span id="dropdownSelectedText">Select Option</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-options" id="dropdownOptions">
+                            <div class="dropdown-option" onclick="chooseOption('Main Spoofing')">Main Spoofing</div>
+                            <div class="dropdown-option" onclick="chooseOption('EFI Spoofing')">EFI Spoofing</div>
+                        </div>
+                    </div>
+                    <button class="action-btn" style="width: 100%; margin-top: 20px;" onclick="startSpoofingProcess()">START</button>
+                </div>
+            </div>
+
+            <footer>HAVE OFFICIAL</footer>
+        </div>
+
+        <!-- 4. LOADING SCREEN -->
+        <div id="screen-loading" class="screen">
+            <div class="loader-wrapper">
+                <div class="spinner-ring"></div>
+                <div class="loading-text" id="loadingText">LOADING...</div>
+            </div>
+        </div>
+
+        <!-- 5. REBOOT SCREEN -->
+        <div id="screen-reboot" class="screen">
+            <div class="reboot-panel">
+                <div class="reboot-title">PLEASE REBOOT YOUR COMPUTER.</div>
+                <button class="back-btn" onclick="switchState('screen-options')">BACK</button>
+            </div>
+        </div>
+
+        <!-- ALERT MODAL -->
+        <div class="alert-modal" id="alertModal">
+            <div class="alert-box">
+                <div class="alert-text">Please select an option.</div>
+                <button class="alert-close-btn" onclick="closeAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedBoardName = "";
+        let currentSelectedOption = "";
+        let initialLoadingInterval = null;
+
+        function switchState(targetScreenId) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                if (screen.id === targetScreenId) {
+                    screen.classList.add('active');
+                } else {
+                    screen.classList.remove('active');
+                }
+            });
+        }
+
+        function handleAuth() {
+            const keyInput = document.getElementById('licenseKey');
+            const authBtn = document.getElementById('authBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            const borderTracer = document.getElementById('borderTracer');
+            const inputWrapper = document.getElementById('inputWrapper');
+
+            errorMsg.style.opacity = '0';
+            inputWrapper.classList.remove('shake');
+
+            if (keyInput.value.trim() === "1234") {
+                borderTracer.classList.add('animating');
+                authBtn.innerText = "AUTHENTICATING...";
+                authBtn.style.pointerEvents = "none";
+                keyInput.disabled = true;
+
+                setTimeout(() => {
+                    switchState('screen-main');
+                    setTimeout(() => {
+                        borderTracer.classList.remove('animating');
+                        authBtn.innerText = "AUTHENTICATE";
+                        authBtn.style.pointerEvents = "auto";
+                        keyInput.disabled = false;
+                        keyInput.value = "";
+                    }, 500);
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    errorMsg.style.opacity = '1';
+                    inputWrapper.classList.add('shake');
+                }, 50);
+            }
+        }
+
+        document.getElementById('licenseKey').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                handleAuth();
+            }
+        });
+
+        /* MAINBOARD SELECTION LOGIC */
+        function highlightBoard(element, boardName) {
+            document.querySelectorAll('.game-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedBoardName = boardName;
+            document.getElementById('selectBoardBtn').disabled = false;
+        }
+
+        function confirmBoardSelection() {
+            if (!selectedBoardName) return;
+
+            switchState('screen-loading');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.classList.remove('fade-out');
+            let dotCount = 0;
+            clearInterval(initialLoadingInterval);
+            initialLoadingInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                loadingText.innerText = "LOADING" + ".".repeat(dotCount);
+            }, 400);
+
+            const duration = Math.floor(Math.random() * 5000) + 5000;
+
+            setTimeout(() => {
+                clearInterval(initialLoadingInterval);
+                document.getElementById('displaySelectedBoard').innerText = selectedBoardName;
+                switchState('screen-options');
+            }, duration);
+        }
+
+        /* DROPDOWN LOGIC */
+        function toggleDropdown() {
+            document.getElementById('dropdownOptions').classList.toggle('show');
+        }
+
+        function chooseOption(optionName) {
+            currentSelectedOption = optionName;
+            document.getElementById('dropdownSelectedText').innerText = optionName;
+            document.getElementById('displaySelectedOption').innerText = optionName;
+            document.getElementById('dropdownOptions').classList.remove('show');
+        }
+
+        function closeAlert() {
+            document.getElementById('alertModal').classList.remove('active');
+        }
+
+        /* SPOOFING PROCESS STEP BY STEP */
+        function getRandomTime(minSec, maxSec) {
+            return (Math.floor(Math.random() * (maxSec - minSec + 1)) + minSec) * 1000;
+        }
+
+        function updateLoadingTextWithFade(newText) {
+            const loadingText = document.getElementById('loadingText');
+            loadingText.classList.add('fade-out');
+            setTimeout(() => {
+                loadingText.innerText = newText;
+                loadingText.classList.remove('fade-out');
+            }, 300);
+        }
+
+        function startSpoofingProcess() {
+            if (!currentSelectedOption) {
+                document.getElementById('alertModal').classList.add('active');
+                return;
+            }
+
+            switchState('screen-loading');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.classList.remove('fade-out');
+
+            // 1. DRIVER LOADING (15 ~ 25 sec)
+            loadingText.innerText = "LOADING DRIVER...";
+            const step1Time = getRandomTime(15, 25);
+
+            setTimeout(() => {
+                // 2. DRIVER LOAD COMPLETED (3 sec)
+                updateLoadingTextWithFade("DRIVER LOAD COMPLETED");
+                
+                setTimeout(() => {
+                    // 3. CLEANER RUNNING (6 ~ 15 sec)
+                    updateLoadingTextWithFade("RUNNING CLEANER...");
+                    const step3Time = getRandomTime(6, 15);
+
+                    setTimeout(() => {
+                        // 4. CLEANER COMPLETED (3 sec)
+                        updateLoadingTextWithFade("CLEANER COMPLETED");
+
+                        setTimeout(() => {
+                            // 5. SPOOFING COMPLETED (3 sec)
+                            updateLoadingTextWithFade("SPOOFING COMPLETED");
+
+                            setTimeout(() => {
+                                // REBOOT SCREEN (FADE VIA switchState)
+                                switchState('screen-reboot');
+                            }, 3000);
+
+                        }, 3000);
+
+                    }, step3Time);
+
+                }, 3000);
+
+            }, step1Time);
+        }
+    </script>
+</body>
+</html>
